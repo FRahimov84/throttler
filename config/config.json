@@ -1,0 +1,20 @@
+{
+  "server": {
+    "address": ":9090"
+  },
+  "database": {
+    "host": "localhost",
+    "port": "5432",
+    "user": "user",
+    "pass": "pass",
+    "name": "throttler",
+    "pool_max": 2,
+    "ssl_mode": "disable"
+  },
+  "external_service": {
+    "url": "test.com",
+    "n": 10,
+    "k": 60,
+    "x": 120
+  }
+}
