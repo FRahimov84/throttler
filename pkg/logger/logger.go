@@ -24,6 +24,7 @@ func InitLogger(filename string) *zap.Logger {
 	consoleEncoder := zapcore.NewConsoleEncoder(config)
 	logFile, _ := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	writer := zapcore.AddSync(logFile)
+
 	defaultLogLevel := zapcore.DebugLevel
 	core := zapcore.NewTee(
 		zapcore.NewCore(fileEncoder, writer, defaultLogLevel),
