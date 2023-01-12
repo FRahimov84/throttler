@@ -25,6 +25,6 @@
     ```sh
     $ docker-compose up --build throttler-go
     ```
-2. Swagger-v1 развернут по [этому](localhost:8080/swagger/index.html) адресу.
+2. Swagger-v1 развернут по [этому](http://localhost:8080/swagger/index.html) адресу.
 3. Для запуска с in memory хранилищем(у меня Redis), необходимо переписать значение по ключу ENABLE_REDIS в 
 compose.yaml в <strong>true</strong>.

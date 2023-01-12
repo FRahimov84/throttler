@@ -8,12 +8,20 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type LoggerCtxKey string
+
+const newKey = LoggerCtxKey("abrakadabra")
+
 func FromCtx(ctx context.Context) *zap.Logger {
-	l, ok := ctx.Value("logger").(*zap.Logger)
-	if ok{
+	l, ok := ctx.Value(newKey).(*zap.Logger)
+	if ok {
 		return l
 	}
 	return nil
+}
+
+func ToCtx(parent context.Context, l *zap.Logger) context.Context {
+	return context.WithValue(parent, newKey, l)
 }
 
 func InitLogger(filename string) *zap.Logger {

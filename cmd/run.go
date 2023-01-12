@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/FRahimov84/throttler/config"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -15,9 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
+	"github.com/FRahimov84/throttler/config"
 	v1 "github.com/FRahimov84/throttler/internal/controller/http/v1"
 	"github.com/FRahimov84/throttler/internal/infrastructure/external_service"
 	repo "github.com/FRahimov84/throttler/internal/infrastructure/repo/postgres"
+	"github.com/FRahimov84/throttler/internal/infrastructure/tasks"
 	"github.com/FRahimov84/throttler/internal/usecase"
 	"github.com/FRahimov84/throttler/pkg/httpserver"
 	"github.com/FRahimov84/throttler/pkg/logger"
@@ -51,7 +52,7 @@ var runCmd = &cobra.Command{
 		} else {
 			connection := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 				cfg.DB.User, cfg.DB.Pass, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name, cfg.DB.SslMode)
-			if cfg.DB.URL != ""{
+			if cfg.DB.URL != "" {
 				connection = cfg.DB.URL
 			}
 			fmt.Println(connection)
@@ -71,6 +72,11 @@ var runCmd = &cobra.Command{
 			uRepo,
 			external_service.New(cfg.ExternalSvc.Url),
 		)
+		// Tasks
+		task := tasks.New(cfg.ExternalSvc.N, cfg.ExternalSvc.K, cfg.ExternalSvc.X)
+		ctx, cancel := context.WithCancel(context.Background())
+		ctx = logger.ToCtx(ctx, l)
+		go task.Do(ctx, throttlerUseCase)
 		//HTTP Server
 		handler := gin.New()
 		v1.NewRouter(handler, throttlerUseCase, l)
@@ -87,11 +93,12 @@ var runCmd = &cobra.Command{
 		}
 		// Shutdown
 		l.Info("application stopping...")
+		cancel()
 		err = httpServer.Shutdown()
 		if err != nil {
 			l.Error("httpServer.Shutdown", zap.Error(err))
 		}
-
+		time.Sleep(3 * time.Second)
 		l.Info("finished!")
 	},
 }
