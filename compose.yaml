@@ -1,6 +1,7 @@
 version: "4"
 volumes:
   db_volume:
+  log_volume:
 services:
   postgres:
     container_name: throttler_postgres
@@ -17,9 +18,15 @@ services:
       - "5432:5432"
   throttler-go:
     build: ./
-    container_name: throttler-go
+    container_name: throttler-app
     image: throttler-go
+    environment:
+      PG_URL: 'postgres://user:pass@postgres:5432/throttler?sslmode=disable'
+      REDIS_URL: 'redis://:qwerty@redis:6379/1?dial_timeout=5s'
+      ENABLE_REDIS: false
     ports:
       - 8080:8080
     depends_on:
       - postgres
+    volumes:
+      - log_volume:/root/logs

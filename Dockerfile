@@ -12,5 +12,6 @@ WORKDIR /root/
 
 COPY --from=builder /throttler/bin/service .
 COPY --from=builder /throttler/config/config.json ./config/
+COPY --from=builder /throttler/docs ./docs
 
 CMD ["./service", "run"]

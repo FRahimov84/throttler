@@ -10,13 +10,7 @@ type Config struct {
 	DB          DB          `json:"database"`
 	ExternalSvc ExternalSvc `json:"external_service"`
 	EnableRedis bool        `env:"ENABLE_REDIS"`
-	Redis       Redis
-}
-
-type Redis struct {
-	Addr string `env:"REDIS_ADDR"`
-	Pass string `env:"REDIS_PASS"`
-	DB   int    `env:"REDIS_DB"`
+	RedisURL    string      `env:"REDIS_URL"`
 }
 
 type Server struct {
@@ -24,6 +18,7 @@ type Server struct {
 }
 
 type DB struct {
+	URL     string `env:"PG_URL"`
 	Host    string
 	Port    string
 	User    string

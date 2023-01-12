@@ -1,4 +1,4 @@
 /pgdata
 bin/
 *.out
-*.log
+/logs

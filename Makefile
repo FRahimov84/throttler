@@ -1,4 +1,4 @@
-include app.env
+include .env
 export
 
 swag-v1: ### swag init

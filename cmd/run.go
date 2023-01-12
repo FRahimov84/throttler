@@ -30,7 +30,7 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(time.Now().Unix())
 		// Logger
-		filename := "app.log"
+		filename := "logs/app.log"
 		l := logger.InitLogger(filename)
 		l.Info("application running...")
 		// Config
@@ -46,10 +46,14 @@ var runCmd = &cobra.Command{
 
 		if cfg.EnableRedis {
 			// TODO: implement redis
+			fmt.Println("with redis mode")
 			return
 		} else {
 			connection := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 				cfg.DB.User, cfg.DB.Pass, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name, cfg.DB.SslMode)
+			if cfg.DB.URL != ""{
+				connection = cfg.DB.URL
+			}
 			fmt.Println(connection)
 			pg, err := postgres.New(connection, postgres.MaxPoolSize(cfg.DB.PoolMax))
 			if err != nil {
