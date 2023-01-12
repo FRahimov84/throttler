@@ -1,19 +1,79 @@
+basePath: /api/v1
+definitions:
+  entity.Request:
+    properties:
+      id:
+        type: string
+      response:
+        type: string
+      status:
+        type: string
+    type: object
+  v1.getReqResp:
+    properties:
+      request:
+        $ref: '#/definitions/entity.Request'
+    type: object
+  v1.newReqResp:
+    properties:
+      uuid:
+        type: string
+    type: object
+  v1.response:
+    properties:
+      error:
+        example: message
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact: {}
+  description: Some desc
+  title: Throttler API
+  version: "1.0"
 paths:
-  /example/helloworld:
+  /throttler/{uuid}:
     get:
-      consumes:
-      - application/json
-      description: do ping
+      description: Return request by uuid
+      operationId: GetRequest
+      parameters:
+      - description: request uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: ping example
+            $ref: '#/definitions/v1.getReqResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Request By UUID
       tags:
-      - example
+      - throttler
+  /translation:
+    post:
+      consumes:
+      - application/json
+      description: Add new request for external svc
+      operationId: NewReq
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.newReqResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: New request
+      tags:
+      - throttler
 swagger: "2.0"

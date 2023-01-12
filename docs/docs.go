@@ -16,9 +16,45 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/example/helloworld": {
+        "/throttler/{uuid}": {
             "get": {
-                "description": "do ping",
+                "description": "Return request by uuid",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "throttler"
+                ],
+                "summary": "Request By UUID",
+                "operationId": "GetRequest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "request uuid",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.getReqResp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            }
+        },
+        "/translation": {
+            "post": {
+                "description": "Add new request for external svc",
                 "consumes": [
                     "application/json"
                 ],
@@ -26,16 +62,64 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "example"
+                    "throttler"
                 ],
-                "summary": "ping example",
+                "summary": "New request",
+                "operationId": "NewReq",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/v1.newReqResp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entity.Request": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "response": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.getReqResp": {
+            "type": "object",
+            "properties": {
+                "request": {
+                    "$ref": "#/definitions/entity.Request"
+                }
+            }
+        },
+        "v1.newReqResp": {
+            "type": "object",
+            "properties": {
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.response": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "message"
                 }
             }
         }
@@ -44,12 +128,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Throttler API",
+	Description:      "Some desc",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

@@ -18,6 +18,10 @@ type (
 	}
 
 	ExternalSvc interface {
-		Call(context.Context) (entity.ExternalSvcResp, error)
+		Call(context.Context, entity.Request) (entity.ExternalSvcResp, error)
+	}
+
+	Tasks interface {
+		Do(ctx context.Context)
 	}
 )

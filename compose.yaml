@@ -15,3 +15,11 @@ services:
       - db_volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  throttler-go:
+    build: ./
+    container_name: throttler-go
+    image: throttler-go
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres

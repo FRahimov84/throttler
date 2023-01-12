@@ -1,16 +1,16 @@
-// Package v1 implements routing paths. Each services in own file.
 package v1
 
 import (
-	"github.com/FRahimov84/throttler/internal/usecase"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/FRahimov84/throttler/docs"
+	"github.com/FRahimov84/throttler/internal/usecase"
 )
 
 // NewRouter
@@ -21,11 +21,9 @@ import (
 // @host        localhost:8080
 // @BasePath	/api/v1
 func NewRouter(handler *gin.Engine, t usecase.Throttler, l *zap.Logger) {
-	docs.SwaggerInfo.BasePath = "/api/v1"
 	// Options
-
-	handler.Use(gin.Logger())
-	handler.Use(gin.Recovery())
+	handler.Use(ginzap.Ginzap(l, time.RFC3339, true))
+	handler.Use(ginzap.RecoveryWithZap(l, true))
 
 	// Swagger
 	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
