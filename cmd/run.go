@@ -83,7 +83,10 @@ var runCmd = &cobra.Command{
 			external_service.New(cfg.ExternalSvcUrl),
 		)
 		// Throttler task
-		task := tasks.New(cfg.TaskOps.N, cfg.TaskOps.K, cfg.TaskOps.X)
+		task, err := tasks.New(cfg.TaskOps.N, cfg.TaskOps.K, cfg.TaskOps.X)
+		if err != nil {
+			l.Fatal("create tasks", zap.Error(err))
+		}
 		ctx, cancel := context.WithCancel(context.Background())
 		ctx = logger.ContextWithLogger(ctx, l)
 		go task.Do(ctx, throttlerUseCase)

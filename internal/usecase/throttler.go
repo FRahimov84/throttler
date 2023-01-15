@@ -59,7 +59,11 @@ func (uc *ThrottlerUseCase) Call(ctx context.Context) {
 	resp, err := uc.externalSvc.CallRemoteSvc(ctx, request)
 	if err != nil {
 		l.Error("ThrottlerUseCase - Call - s.externalSvc.Call", zap.Error(err))
-		return
+		resp = entity.ExternalSvcResp{
+			Status:   request.Status,
+			Response: request.Response,
+		}
+		err = nil
 	}
 
 	err = uc.repo.UpdateRequest(ctx, entity.Request{

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -15,8 +16,11 @@ type Caller interface {
 	Call(ctx context.Context)
 }
 
-func New(n int, k int, x int) *ThrottlerTask {
-	return &ThrottlerTask{n: n, k: k, x: x}
+func New(n int, k int, x int) (*ThrottlerTask, error) {
+	if n < 1 || k < 1 {
+		return nil, fmt.Errorf("bad task options n: %d, k: %d. Options should be greater than zero", n, k)
+	}
+	return &ThrottlerTask{n: n, k: k, x: x}, nil
 }
 
 func (t *ThrottlerTask) Do(ctx context.Context, caller Caller) {

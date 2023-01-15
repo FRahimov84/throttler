@@ -6,3 +6,5 @@ CREATE TABLE if not exists requests
     status   varchar(20) DEFAULT 'new'                          NOT NULL,
     response text        DEFAULT ''                             NOT NULL
 );
+
+UPDATE requests SET status = 'new' WHERE status = 'processing';
