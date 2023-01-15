@@ -17,8 +17,13 @@ func New(r ThrottlerRepo, e ExternalSvc) *ThrottlerUseCase {
 	return &ThrottlerUseCase{repo: r, externalSvc: e}
 }
 
-func (uc *ThrottlerUseCase) NewRequest(ctx context.Context) (entity.UUID, error) {
-	uuid, err := uc.repo.StoreRequest(ctx)
+func (uc *ThrottlerUseCase) NewRequest(ctx context.Context, request entity.Request) (entity.UUID, error) {
+	err := request.Validate()
+	if err != nil {
+		return entity.UUID{}, fmt.Errorf("ThrottlerUseCase - NewRequest - Validate: %w", err)
+	}
+
+	uuid, err := uc.repo.StoreRequest(ctx, request)
 	if err != nil {
 		return entity.UUID{}, fmt.Errorf("ThrottlerUseCase - NewRequest - s.repo.StoreRequest: %w", err)
 	}
@@ -26,27 +31,32 @@ func (uc *ThrottlerUseCase) NewRequest(ctx context.Context) (entity.UUID, error)
 	return uuid, nil
 }
 
-func (uc *ThrottlerUseCase) RequestByUUID(ctx context.Context, uuid entity.UUID) (entity.Request, error) {
-	req, err := uc.repo.RequestByUUID(ctx, uuid)
+func (uc *ThrottlerUseCase) GetRequestByID(ctx context.Context, uuid entity.UUID) (entity.Request, error) {
+	req, err := uc.repo.GetRequestByID(ctx, uuid)
 	if err != nil {
+		if err == entity.RepoNotFoundErr {
+			return entity.Request{}, err
+		}
 		return entity.Request{}, fmt.Errorf("ThrottlerUseCase - RequestByUUID - s.repo.RequestByUUID: %w", err)
 	}
 
 	return req, nil
 }
 
+// Call process requests
 func (uc *ThrottlerUseCase) Call(ctx context.Context) {
-	l := logger.FromCtx(ctx)
-	request, err := uc.repo.GetReqByFilter(ctx, entity.Filter{Status: "new"})
+	l := logger.LoggerFromContext(ctx)
+
+	request, err := uc.repo.GetRequestByFilter(ctx, entity.Filter{Status: "new"})
 	if err != nil {
-		if err == entity.NoRows {
+		if err == entity.RepoNotFoundErr {
 			return
 		}
 		l.Error("ThrottlerUseCase - Call - s.repo.GetReqByFilter", zap.Error(err))
 		return
 	}
 
-	resp, err := uc.externalSvc.Call(ctx, request)
+	resp, err := uc.externalSvc.CallRemoteSvc(ctx, request)
 	if err != nil {
 		l.Error("ThrottlerUseCase - Call - s.externalSvc.Call", zap.Error(err))
 		return
@@ -62,5 +72,8 @@ func (uc *ThrottlerUseCase) Call(ctx context.Context) {
 		return
 	}
 
-	l.Info("ThrottlerUseCase - Call - request processed", zap.Any("request", request), zap.Any("resp", resp))
+	l.Info("ThrottlerUseCase - Call - request processed",
+		zap.Any("request", request),
+		zap.Any("resp", resp),
+	)
 }

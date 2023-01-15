@@ -8,7 +8,14 @@ type UUID struct {
 
 var EmptyUUID = UUID{uuid.Nil}
 
-func ParseUUID(str string) UUID {
-	parse, _ := uuid.Parse(str)
-	return UUID{parse}
+// ParseUUID parses from string UUID
+func ParseUUID(str string) (UUID, error) {
+	parse, err := uuid.Parse(str)
+	return UUID{parse}, err
+}
+
+// New generate new UUID
+func New() UUID {
+	u := uuid.New()
+	return UUID{u}
 }

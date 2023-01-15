@@ -6,11 +6,18 @@ import (
 )
 
 type Config struct {
-	Server      Server
-	DB          DB          `json:"database"`
-	ExternalSvc ExternalSvc `json:"external_service"`
-	EnableRedis bool        `env:"ENABLE_REDIS"`
-	RedisURL    string      `env:"REDIS_URL"`
+	Server         Server
+	DB             DB      `json:"database"`
+	ExternalSvcUrl string  `json:"external_svc_url"`
+	TaskOps        TaskOps `json:"task_ops"`
+	EnableRedis    bool    `env:"ENABLE_REDIS"`
+	Redis          Redis
+}
+
+type Redis struct {
+	Host string `env:"REDIS_HOST" env-default:"localhost"`
+	Port string `env:"REDIS_PORT" env-default:"6379"`
+	Pass string `env:"REDIS_PASSWORD"`
 }
 
 type Server struct {
@@ -28,11 +35,13 @@ type DB struct {
 	SslMode string `json:"ssl_mode"`
 }
 
-type ExternalSvc struct {
-	Url string
-	N   int
-	K   int
-	X   int
+type TaskOps struct {
+	// N is count of requests per K seconds
+	N int
+	// K is time established for N requests
+	K int
+	// X blocking time when limits are exceeded
+	X int
 }
 
 func LoadConfig(file string) (*Config, error) {

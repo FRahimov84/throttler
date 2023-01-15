@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"context"
-	"github.com/FRahimov84/throttler/internal/usecase"
 	"time"
 )
 
@@ -12,11 +11,15 @@ type ThrottlerTask struct {
 	x int
 }
 
+type Caller interface {
+	Call(ctx context.Context)
+}
+
 func New(n int, k int, x int) *ThrottlerTask {
 	return &ThrottlerTask{n: n, k: k, x: x}
 }
 
-func (t *ThrottlerTask) Do(ctx context.Context, caller usecase.Caller) {
+func (t *ThrottlerTask) Do(ctx context.Context, caller Caller) {
 	rate := time.Second * time.Duration(t.k/t.n)
 	burstLimit := t.n
 	tick := time.NewTicker(rate)
@@ -33,7 +36,7 @@ func (t *ThrottlerTask) Do(ctx context.Context, caller usecase.Caller) {
 		case <-ctx.Done():
 			return
 		case <-throttle:
-				go caller.Call(ctx)
+			go caller.Call(ctx)
 		}
 	}
 }

@@ -11,10 +11,10 @@
     "pool_max": 2,
     "ssl_mode": "disable"
   },
-  "external_service": {
-    "url": "test.com",
+  "task_ops": {
     "n": 10,
     "k": 60,
     "x": 120
-  }
+  },
+  "external_svc_url": "test.com"
 }

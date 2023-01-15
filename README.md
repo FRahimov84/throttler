@@ -26,5 +26,13 @@
     $ docker-compose up --build throttler-go
     ```
 2. Swagger-v1 развернут по [этому](http://localhost:8080/swagger/index.html) адресу.
-3. Для запуска с in memory хранилищем(у меня Redis), необходимо переписать значение по ключу ENABLE_REDIS в 
-compose.yaml в <strong>true</strong>.
+3. Для запуска с in memory хранилищем(у меня Redis), необходимо записать в переменную окружения ENABLE_REDIS=<strong>true</strong> и все параметры для подключения к редису в <strong>.env</strong> файл.
+4. Запускаем редис (по дефоулту)
+   ```
+   docker network create redis
+   docker run -it --rm --name redis --net redis -p 6379:6379 redis:6.0-alpine
+   ```
+5. и наше приложение
+   ```azure
+   make all
+   ```

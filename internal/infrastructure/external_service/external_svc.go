@@ -16,11 +16,11 @@ func New(url string) *ExternalService {
 	return &ExternalService{URL: url}
 }
 
-func (e *ExternalService) Call(ctx context.Context, r entity.Request) (entity.ExternalSvcResp, error) {
+func (e *ExternalService) CallRemoteSvc(ctx context.Context, r entity.Request) (entity.ExternalSvcResp, error) {
 	//	TODO: implement caller
 	time.Sleep(100 * time.Millisecond)
 	return entity.ExternalSvcResp{
-		Status:   "Success",
+		Status:   "success",
 		Response: fmt.Sprintf("Request %s processed", r.ID.String()),
 	}, nil
 }

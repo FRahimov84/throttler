@@ -2,6 +2,9 @@ version: "4"
 volumes:
   db_volume:
   log_volume:
+networks:
+  my_app:
+    driver: bridge
 services:
   postgres:
     container_name: throttler_postgres
@@ -16,17 +19,31 @@ services:
       - db_volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - my_app
   throttler-go:
     build: ./
-    container_name: throttler-app
+    container_name: throttler_app
     image: throttler-go
     environment:
-      PG_URL: 'postgres://user:pass@postgres:5432/throttler?sslmode=disable'
-      REDIS_URL: 'redis://:qwerty@redis:6379/1?dial_timeout=5s'
+      LOG_LEVEL: "debug"
+      PG_URL: "postgres://user:pass@postgres:5432/throttler?sslmode=disable"
       ENABLE_REDIS: false
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - postgres
+      - redis
     volumes:
       - log_volume:/root/logs
+    networks:
+      - my_app
+  redis:
+    image: redis:6.0-alpine
+    container_name: throttler_redis
+    networks:
+      - my_app
+    ports:
+      - "6379:6379"

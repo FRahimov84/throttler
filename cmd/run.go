@@ -18,11 +18,13 @@ import (
 	v1 "github.com/FRahimov84/throttler/internal/controller/http/v1"
 	"github.com/FRahimov84/throttler/internal/infrastructure/external_service"
 	repo "github.com/FRahimov84/throttler/internal/infrastructure/repo/postgres"
+	repo_rdb "github.com/FRahimov84/throttler/internal/infrastructure/repo/redis"
 	"github.com/FRahimov84/throttler/internal/infrastructure/tasks"
 	"github.com/FRahimov84/throttler/internal/usecase"
 	"github.com/FRahimov84/throttler/pkg/httpserver"
 	"github.com/FRahimov84/throttler/pkg/logger"
 	"github.com/FRahimov84/throttler/pkg/postgres"
+	"github.com/FRahimov84/throttler/pkg/redis"
 )
 
 var runCmd = &cobra.Command{
@@ -39,43 +41,51 @@ var runCmd = &cobra.Command{
 		if err != nil {
 			l.Fatal("Err on load config", zap.Error(err))
 		}
-		fmt.Printf("%+v\n", cfg)
 		// storage
 		var (
 			uRepo usecase.ThrottlerRepo
 		)
-
 		if cfg.EnableRedis {
-			// TODO: implement redis
-			fmt.Println("with redis mode")
-			return
+			l.Info("With redis mode", zap.Any("host",cfg.Redis.Host),
+				zap.Any("port",cfg.Redis.Port),
+				zap.Any("pass",cfg.Redis.Pass))
+			rdb, err := redis.New(
+				cfg.Redis.Host,
+				cfg.Redis.Port,
+				cfg.Redis.Pass,
+			)
+			if err != nil {
+				l.Fatal("redis new", zap.Error(err))
+			}
+			uRepo = repo_rdb.New(rdb)
 		} else {
 			connection := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 				cfg.DB.User, cfg.DB.Pass, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name, cfg.DB.SslMode)
 			if cfg.DB.URL != "" {
 				connection = cfg.DB.URL
 			}
-			fmt.Println(connection)
 			pg, err := postgres.New(connection, postgres.MaxPoolSize(cfg.DB.PoolMax))
 			if err != nil {
 				l.Fatal("postgres new", zap.Error(err))
 			}
 			defer pg.Close()
+
 			err = pg.Pool.Ping(context.Background())
 			if err != nil {
 				l.Fatal("err to ping database", zap.Error(err))
 			}
+
 			uRepo = repo.New(pg)
 		}
 		// Use case
 		throttlerUseCase := usecase.New(
 			uRepo,
-			external_service.New(cfg.ExternalSvc.Url),
+			external_service.New(cfg.ExternalSvcUrl),
 		)
-		// Tasks
-		task := tasks.New(cfg.ExternalSvc.N, cfg.ExternalSvc.K, cfg.ExternalSvc.X)
+		// Throttler task
+		task := tasks.New(cfg.TaskOps.N, cfg.TaskOps.K, cfg.TaskOps.X)
 		ctx, cancel := context.WithCancel(context.Background())
-		ctx = logger.ToCtx(ctx, l)
+		ctx = logger.ContextWithLogger(ctx, l)
 		go task.Do(ctx, throttlerUseCase)
 		//HTTP Server
 		handler := gin.New()

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ func newThrottlerRoutes(handler *gin.RouterGroup, t usecase.Throttler, l *zap.Lo
 	h := handler.Group("/throttler")
 	{
 		h.POST("", r.newRequest)
-		h.GET("/:REQ-UUID", r.getRequestByUUID)
+		h.GET("/:UUID", r.getRequestByID)
 	}
 }
 
@@ -39,11 +38,18 @@ type newReqResp struct {
 // @Produce     json
 // @Success     200 {object} newReqResp
 // @Failure     500 {object} response
-// @Router      /translation [post]
+// @Router      /throttler [post]
 func (r *throttlerroutes) newRequest(c *gin.Context) {
-	uuid, err := r.t.NewRequest(c.Request.Context())
+	// TODO: parse request structure from body
+	uuid, err := r.t.NewRequest(c.Request.Context(), entity.Request{Status: "new"})
 	if err != nil {
-		r.l.Error("http - v1 - newRequest", zap.Error(err))
+		if err == entity.RequestStatusErr {
+			r.l.Info("http - v1 - newRequest - uc.NewRequest", zap.Error(err))
+			errorResponse(c, http.StatusBadRequest, "bad request status")
+			return
+		}
+
+		r.l.Error("http - v1 - newRequest - uc.NewRequest", zap.Error(err))
 		errorResponse(c, http.StatusInternalServerError, "db error")
 		return
 	}
@@ -65,18 +71,23 @@ type getReqResp struct {
 // @Success     200 {object} getReqResp
 // @Failure     500 {object} response
 // @Router      /throttler/{uuid} [get]
-func (r *throttlerroutes) getRequestByUUID(c *gin.Context) {
-	reqUUID := entity.ParseUUID(c.Param("REQ-UUID"))
-	if reqUUID == entity.EmptyUUID {
-		r.l.Error("http - v1 - getRequestByUUID", zap.Error(fmt.Errorf("bad uuid in request")))
-		errorResponse(c, http.StatusBadRequest, "invalid request uuid")
+func (r *throttlerroutes) getRequestByID(c *gin.Context) {
+	reqUUID, err := entity.ParseUUID(c.Param("UUID"))
+	if err != nil {
+		r.l.Info("http - v1 - getRequestByID - ParseUUID", zap.Any("uuid", c.Param("UUID")), zap.Error(err))
+		errorResponse(c, http.StatusBadRequest, "bad request uuid")
 
 		return
 	}
 
-	request, err := r.t.RequestByUUID(c.Request.Context(), reqUUID)
+	request, err := r.t.GetRequestByID(c.Request.Context(), reqUUID)
 	if err != nil {
-		r.l.Error("http - v1 - getRequestByUUID", zap.Error(err))
+		if err == entity.RepoNotFoundErr {
+			r.l.Info("http - v1 - getRequestByID - uc.GetRequestByID", zap.Error(err))
+			errorResponse(c, http.StatusNotFound, "request not found")
+			return
+		}
+		r.l.Error("http - v1 - getRequestByID - uc.GetRequestByID", zap.Error(err))
 		errorResponse(c, http.StatusInternalServerError, "db error")
 		return
 	}

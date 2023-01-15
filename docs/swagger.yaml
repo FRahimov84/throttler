@@ -32,6 +32,26 @@ info:
   title: Throttler API
   version: "1.0"
 paths:
+  /throttler:
+    post:
+      consumes:
+      - application/json
+      description: Add new request for external svc
+      operationId: NewReq
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.newReqResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: New request
+      tags:
+      - throttler
   /throttler/{uuid}:
     get:
       description: Return request by uuid
@@ -54,26 +74,6 @@ paths:
           schema:
             $ref: '#/definitions/v1.response'
       summary: Request By UUID
-      tags:
-      - throttler
-  /translation:
-    post:
-      consumes:
-      - application/json
-      description: Add new request for external svc
-      operationId: NewReq
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/v1.newReqResp'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/v1.response'
-      summary: New request
       tags:
       - throttler
 swagger: "2.0"
